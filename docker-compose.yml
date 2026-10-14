@@ -1,0 +1,23 @@
+# Local stand-ins for the AWS services, used by integration tests and `sam local start-api`.
+# Host ports default to 8100/6380 to avoid clashing with other local DynamoDB/Redis
+# instances; override with DYNAMODB_PORT / VALKEY_PORT.
+name: serverless-orders-api
+
+services:
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    # -sharedDb: one database regardless of the credentials/region the client uses.
+    command: ['-jar', 'DynamoDBLocal.jar', '-inMemory', '-sharedDb']
+    ports:
+      - '${DYNAMODB_PORT:-8100}:8000'
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    ports:
+      - '${VALKEY_PORT:-6380}:6379'
+
+# Fixed network name so `sam local start-api --docker-network orders-local` can reach
+# the containers by service name (http://dynamodb:8000, valkey:6379).
+networks:
+  default:
+    name: orders-local
